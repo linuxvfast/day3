@@ -15,7 +15,7 @@ def login_user():
     if username in lock_info:
         print('The user [%s] has been locked'% username)
         exit()
-
+    #读取用户列表
     user_info = []
     with open('user_info.txt','r') as user_file:
         for user in user_file:
@@ -23,6 +23,7 @@ def login_user():
     user_file.close()
     # print(user_info)
 
+    #判断密码输入是否超过三次，超过三次锁定
     count = 0
     flag_test = True
     while flag_test:
