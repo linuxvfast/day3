@@ -1,0 +1,174 @@
+__author__ = 'linux vfast'
+import os,json
+
+def register():
+    '''注册模块'''
+
+    # 检查文件
+    file_name = ["user_info","shopping_info"]
+    for file_index in range(len(file_name)):
+        if not os.path.isfile(file_name[file_index]):
+            with open(file_name[file_index], "w", encoding="utf-8") as f:
+                f.write(" ")
+    file = 'balance_info'
+    if not os.path.isfile(file):
+        with open(file, "w", encoding="utf-8") as f:
+            f.write(str(0))
+    # 注册用户
+    with open('user_info','r',encoding='utf-8') as user_info:
+        check_user = False
+        while not check_user:
+            user = input('请输入用户名:')
+            user_info.seek(0)   #每次输入重复的名字都提示存在
+            user_check = []
+            for user_list in user_info:
+                # print(user_list.strip().split())   #调试
+                check_list = user_list.strip().split()
+                print(check_list)  #调试
+                # print(check_list[0])
+                user_check.append(check_list[0])
+            print(user_check)
+            # if check_list != []:
+            if user in user_check:
+                print('用户已经存在！')
+                check_user = False
+            else:
+                check_user = True
+                break
+        password = input('请输入密码:')
+    with open('user_info','a',encoding='utf-8') as write_user:
+        write_user.writelines('%s %s\n'%(user,password))
+    print('注册完成请登录')
+
+
+def login():
+    '''登录验证'''
+    username = input('请输入用户名:')
+    password = input('请输入密码:')
+    with open('user_info', 'r', encoding='utf-8') as user_check:
+        for line in user_check:
+            line_list=line.strip().split()
+            if username == line_list[0] and password == line_list[1]:
+                print("\033[41;1m登陆成功\033[0m")
+                return username               
+        else:
+            print("\033[41;1m用户名或密码无效，请重新登陆\033[0m")
+            return username
+
+
+def get_balance():
+    '''获取余额'''
+    with open('balance_info', 'r', encoding='utf-8') as store_file:
+        balance = store_file.readline()
+        if balance.isdigit():
+            print('当前的余额为%s' % balance)
+            return balance
+        else:
+            print('当前的余额为0')
+            return balance
+
+def get_shopping():
+    '''购物'''
+    shopp_line = input('请输入商品序号')
+
+def history_shopping():
+    '''购物记录'''
+    with open('shopping_info','r',encoding='utf-8') as r_shop:
+        for line in r_shop:
+            line = line.strip()
+            print(line)
+
+def add_money():
+    '''充值'''
+    check_money = True
+    while check_money:
+        add_balance = input('请输入充值的金额:')
+        if add_balance.isdigit() and int(add_balance) > 0:
+            str_balance = int(add_balance) + int(balance)
+            with open('balance_info','w',encoding='utf-8') as balance_info:
+                balance_info.write(str(str_balance))
+            # with open('balance_info.json','w',encoding='utf-8') as w_json:
+            #     json.dump(str_balance,w_json)
+            #     print('当前的金额为%s'% str_balance)
+            check_money = False
+        else:
+            print('输入错误，请重新输入')
+            check_money = True
+
+product_list = [
+    ("Iphone", 8880),
+    ("Huawei", 4888),
+    ("Xiaomi", 2588),
+    ("Nokia", 3800),
+    ("Lenovo", 1588),
+    ("Vivo", 2148),
+    ("Oppo", 2488)
+]
+
+judge = False
+while not judge:
+    print('欢迎您登录购物商城'.center(50,'*'))
+    print('\033[32m登录请选择(L)\033[0m' + '\n' + '\033[33m注册请选择(R)\033[0m')
+    choose = input('\033[41m 请选择>>>: \033[0m')
+    if choose == 'R':
+        register()
+        judge = False
+    elif choose == 'L':
+        login_user = login()
+        if login_user:
+            if login_user == 'admin':
+                print('管理员登录')
+            else:
+                while True:
+                    product_info = []
+                    for index,line in enumerate(product_list):
+                        print(index,line)
+                    print('开始购物(s),消费记录(c),退出(q),充值(t)')
+                    balance = get_balance()
+                    balance = int(balance)
+                    choose_options = input('\033[41m请输入>>>:\033[0m')
+                    if choose_options == 's':
+                        shopp_line = input('请输入商品序号>>>:')
+                        if shopp_line.isdigit():
+                            shopp_line = int(shopp_line)
+                            if shopp_line < len(product_list) and shopp_line >=0:
+                                shop_item = product_list[shopp_line]
+                                if shop_item[1] <= balance:
+                                    balance -= shop_item[1]
+                                    with open('balance_info','w',encoding='utf-8')as balance_file:
+                                        balance_file.writelines(str(balance))
+                                    product_info.append(shop_item)
+                                    for shop in product_info:
+                                        # print(shop)
+                                        with open('shopping_info','a',encoding='utf-8')as shopp_file:
+                                            shopp_file.writelines(shop[0] + '\n')
+                                            # json.dump(shop,shopp_line)
+                                            continue
+                                else:
+                                    print('余额不足,请充值')
+                                    continue
+                            else:
+                                print('shopping code [%s] is not exist!'% shopp_line)
+                        else:
+                            print('invalid option')
+                    elif choose_options == 'c':
+                        history_shopping()
+                    elif choose_options == 't':
+                        add_money()
+                        continue
+                    elif choose_options == 'q':
+                        print('购物结束,退出登录!')
+                        print('购物列表'.center(50,'*'))
+                        with open('shopping_info', 'r', encoding='utf-8')as f:
+                            for shop in f:
+                                print(shop.strip())
+                        print('当前的余额为%s'% balance)
+                        break
+                    else:
+                        continue
+
+        judge = True
+    else:
+        print('\033[31m输入错误，请重新输入\033[0m')
+        judge = False
+
